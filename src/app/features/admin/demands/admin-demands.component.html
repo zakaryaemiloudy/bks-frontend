@@ -1,0 +1,103 @@
+<div class="space-y-6">
+  <h2 class="text-xl font-semibold text-gray-900">Demandes de sang</h2>
+
+  <!-- Filter tabs -->
+  <div class="flex gap-2 border-b border-gray-200">
+    <button
+      type="button"
+      (click)="setTab('all')"
+      class="px-4 py-2 text-sm font-medium rounded-t-lg transition-colors"
+      [class.bg-white]="activeTab() === 'all'"
+      [class.text-red-600]="activeTab() === 'all'"
+      [class.border]="activeTab() === 'all'"
+      [class.border-b-0]="activeTab() === 'all'"
+      [class.border-gray-200]="activeTab() === 'all'"
+      [class.-mb-px]="activeTab() === 'all'"
+      [class.text-gray-600]="activeTab() !== 'all'"
+      [class.hover:bg-gray-50]="activeTab() !== 'all'"
+    >
+      Toutes
+    </button>
+    <button
+      type="button"
+      (click)="setTab('urgent')"
+      class="px-4 py-2 text-sm font-medium rounded-t-lg transition-colors"
+      [class.bg-white]="activeTab() === 'urgent'"
+      [class.text-red-600]="activeTab() === 'urgent'"
+      [class.border]="activeTab() === 'urgent'"
+      [class.border-b-0]="activeTab() === 'urgent'"
+      [class.border-gray-200]="activeTab() === 'urgent'"
+      [class.-mb-px]="activeTab() === 'urgent'"
+      [class.text-gray-600]="activeTab() !== 'urgent'"
+      [class.hover:bg-gray-50]="activeTab() !== 'urgent'"
+    >
+      Urgentes
+    </button>
+    <button
+      type="button"
+      (click)="setTab('encours')"
+      class="px-4 py-2 text-sm font-medium rounded-t-lg transition-colors"
+      [class.bg-white]="activeTab() === 'encours'"
+      [class.text-red-600]="activeTab() === 'encours'"
+      [class.border]="activeTab() === 'encours'"
+      [class.border-b-0]="activeTab() === 'encours'"
+      [class.border-gray-200]="activeTab() === 'encours'"
+      [class.-mb-px]="activeTab() === 'encours'"
+      [class.text-gray-600]="activeTab() !== 'encours'"
+      [class.hover:bg-gray-50]="activeTab() !== 'encours'"
+    >
+      En cours
+    </button>
+  </div>
+
+  @if (loading()) {
+    <p class="text-gray-500">Chargement...</p>
+  } @else {
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      @for (dem of filteredDemandes(); track dem.id) {
+        <div
+          class="bg-white rounded-xl shadow-sm border border-gray-200 border-l-4 hover:shadow-md transition-shadow p-5"
+          [class]="urgencyBorderClass(dem.urgence)"
+        >
+          <div class="flex items-start gap-3">
+            <app-blood-type-badge [groupeSanguin]="dem.groupeSanguinDemande" />
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium text-gray-900">{{ dem.nomPatient }} {{ dem.prenomPatient }}</p>
+              <p class="text-xs text-gray-500">#REQ-{{ dem.id }} · {{ dem.quantiteDemandee }} ml</p>
+              <p class="text-xs text-gray-600 mt-1">{{ dem.dateDemande | date:'short' }}</p>
+              <app-status-badge [status]="dem.statut" class="mt-2" />
+            </div>
+          </div>
+          <div class="mt-4 flex flex-wrap gap-2">
+            @if (dem.statut === 'EN_ATTENTE' || dem.statut === 'EN_COURS') {
+              <button
+                type="button"
+                (click)="traiter(dem.id, 'SATISFAITE')"
+                class="px-3 py-1.5 text-xs font-medium rounded-lg bg-green-100 text-green-800 hover:bg-green-200 transition-colors"
+              >
+                Satisfaire
+              </button>
+              <button
+                type="button"
+                (click)="traiter(dem.id, 'EN_COURS')"
+                class="px-3 py-1.5 text-xs font-medium rounded-lg bg-sky-100 text-sky-800 hover:bg-sky-200 transition-colors"
+              >
+                En cours
+              </button>
+              <button
+                type="button"
+                (click)="traiter(dem.id, 'REJETEE')"
+                class="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                title="Rejeter"
+              >
+                <span class="material-symbols-outlined text-lg">close</span>
+              </button>
+            }
+          </div>
+        </div>
+      } @empty {
+        <p class="col-span-full text-gray-500 py-8 text-center">Aucune demande.</p>
+      }
+    </div>
+  }
+</div>
