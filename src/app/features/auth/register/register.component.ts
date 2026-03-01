@@ -1,10 +1,14 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { finalize } from 'rxjs/operators';
 import { AuthService } from '../../../core/auth/auth.service';
 import { SuperAdminApiService } from '../../../core/services/api/super-admin-api.service';
 import type { Role } from '../../../core/models/types';
 import type { HopitalResponse } from '../../../core/models/types';
+
+/** Same permissive email pattern as login - accepts user@domain.tld */
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 @Component({
   selector: 'app-register',
@@ -24,9 +28,9 @@ export class RegisterComponent implements OnInit {
   form = this.fb.nonNullable.group({
     prenom: ['', Validators.required],
     nom: ['', Validators.required],
-    email: ['', [Validators.required, Validators.email]],
+    email: ['', [Validators.required, Validators.pattern(EMAIL_PATTERN)]],
     telephone: ['', Validators.required],
-    motDePasse: ['', [Validators.required, Validators.minLength(8)]],
+    motDePasse: ['', [Validators.required, Validators.minLength(6)]],
     role: ['USER' as Role, Validators.required],
     hopitalId: [null as number | null],
   });
@@ -45,6 +49,7 @@ export class RegisterComponent implements OnInit {
   submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.error = 'Veuillez remplir tous les champs correctement (email valide, mot de passe min. 6 caractères).';
       return;
     }
     this.loading = true;
@@ -59,15 +64,17 @@ export class RegisterComponent implements OnInit {
       role: raw.role,
       hopitalId: raw.role === 'ADMIN' ? raw.hopitalId ?? undefined : undefined,
     };
-    this.auth.register(payload).subscribe({
-      next: () => {},
-      error: (err) => {
-        this.error = err.error?.message ?? "Erreur d'inscription";
-        this.loading = false;
-      },
-      complete: () => {
-        this.loading = false;
-      },
-    });
+    this.auth
+      .register(payload)
+      .pipe(finalize(() => (this.loading = false)))
+      .subscribe({
+        next: () => {},
+        error: (err) => {
+          this.error =
+            err.error?.message ??
+            err.message ??
+            "Erreur d'inscription";
+        },
+      });
   }
 }

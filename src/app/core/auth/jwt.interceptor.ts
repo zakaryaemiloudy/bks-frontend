@@ -15,9 +15,8 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   }
   return next(req).pipe(
     catchError((err: HttpErrorResponse) => {
-      if (err.status === 401 || err.status === 403) {
-        const auth = inject(AuthService);
-        auth.logout();
+      if ((err.status === 401 || err.status === 403) && token) {
+        inject(AuthService).logout();
         inject(Router).navigate(['/auth/login']);
       }
       return throwError(() => err);

@@ -59,7 +59,12 @@ export class AuthService {
     hopitalId?: number;
   }): Observable<AuthResponse> {
     return this.authApi.register(data).pipe(
-      tap((res) => this.setSession(res))
+      tap((res) => {
+        if (!res?.token || typeof res.token !== 'string') {
+          throw new Error('Réponse serveur invalide : token manquant');
+        }
+        this.setSession(res);
+      })
     );
   }
 
